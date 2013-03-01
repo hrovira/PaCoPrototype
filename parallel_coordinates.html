@@ -75,7 +75,7 @@
 
         var axis = d3.svg.axis().ticks(0).orient("left");
 
-        d3.tsv("data/newborns.tsv", function (tsvdata) {
+        d3.tsv("data/samples.tsv", function (tsvdata) {
             var dataByRows = _.groupBy(tsvdata, "Gene");
             _.each(dataByRows, function (data, GENE) {
                 var svg = d3.select("#C_" + GENE).append("svg:svg").attr("width", w + m[1] + m[3]).attr("height", h + m[0] + m[2])

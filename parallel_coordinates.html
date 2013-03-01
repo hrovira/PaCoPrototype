@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+    <link type="text/css" rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.0/css/bootstrap.min.css"/>
+    <link type="text/css" rel="stylesheet" href="css/parallel_coordinates.css"/>
+
+    <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.4/underscore-min.js"></script>
+    <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.0/bootstrap.min.js"></script>
+    <script type="text/javascript" src="http://raw.github.com/mbostock/d3/master/d3.min.js"></script>
+</head>
+
+<body>
+<table class="table data-grid table-striped table-condensed">
+    <thead>
+    <tr class="C_HEADERS">
+        <th>Gene</th>
+        <th>Coordinate</th>
+        <th>MAF(%)</th>
+        <th>Polyphen2 prediction</th>
+        <th>Gene Function</th>
+        <th>Minor Allele Transmitted</th>
+        <th>Major Allele Transmitted</th>
+        <th>&nbsp;</th>
+    </tr>
+    </thead>
+</table>
+
+
+<script type="text/javascript">
+    var RACES = ["AMR", "AFA", "EUR", "ASN"];
+    var SUB_POPULATION_PERCS = {};
+
+    $.ajax({
+        "method":"GET",
+        "url":"data/variants.tsv",
+        success:function (tsv) {
+            var headers = $(".C_HEADERS").find("th");
+
+            var rows = d3.tsv.parse(tsv);
+            var html = "";
+            _.each(rows, function (row) {
+                var GENE = row["Gene"];
+                html += "<tr>";
+                _.each(headers, function (h) {
+                    html += "<td>";
+                    if (!_.isEmpty(h.innerHTML) && !_.isEmpty(row[h.innerHTML])) {
+                        html += row[h.innerHTML];
+                    }
+                    html += "</td>";
+                });
+                html += "<td id='C_" + GENE + "' class='vis_container'></td>";
+                html += "</tr>";
+                SUB_POPULATION_PERCS[GENE] = {};
+                _.each(RACES, function (race) {
+                    SUB_POPULATION_PERCS[GENE][race] = row[race];
+                })
+            });
+            $(".data-grid").append(html);
+
+            LoadNewborns();
+        }
+    });
+
+    var LoadNewborns = function () {
+        var line = d3.svg.line();
+
+        var m = [20, 40, 0, 40];
+        var w = 300;
+        var h = 50;
+
+        var x = d3.scale.ordinal().domain(RACES).rangePoints([0, w]);
+        var y = {};
+
+        var axis = d3.svg.axis().ticks(0).orient("left");
+
+        d3.tsv("data/newborns.tsv", function (tsvdata) {
+            var dataByRows = _.groupBy(tsvdata, "Gene");
+            _.each(dataByRows, function (data, GENE) {
+                var svg = d3.select("#C_" + GENE).append("svg:svg").attr("width", w + m[1] + m[3]).attr("height", h + m[0] + m[2])
+                        .append("svg:g").attr("transform", "translate(" + m[3] + "," + m[0] + ")");
+
+                // Create a scale for each trait.
+                RACES.forEach(function (d) {
+                    y[d] = d3.scale.linear().domain([0,1]).range([h, 0]);
+                });
+
+                // Add foreground lines.
+                svg.append("svg:g").attr("class", "foreground").selectAll("path").data(data)
+                        .enter().append("svg:path").attr("d", path).attr("stroke", "#080");
+
+                // Add a group element for each trait.
+                var g = svg.selectAll(".trait").data(RACES).enter().append("svg:g").attr("class", "trait")
+                        .attr("transform", function (d) {
+                            return "translate(" + x(d) + ")";
+                        });
+
+                // Add an axis and title.
+                g.append("svg:g").attr("class", "axis")
+                        .each(function (d) {
+                            d3.select(this).call(axis.scale(y[d]));
+                        })
+                        .append("svg:text").attr("text-anchor", "middle").attr("y", -9)
+                        .text(function (d) {
+                            return d + " (" + SUB_POPULATION_PERCS[GENE][d] + "%)";
+                        });
+
+            });
+        });
+
+        // Returns the path for a given data point.
+        function path(d) {
+            return line(RACES.map(function (p) {
+                return [x(p), y[p](d[p])];
+            }));
+        }
+
+    }
+</script>
+</body>
+</html>

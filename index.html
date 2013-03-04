@@ -43,17 +43,16 @@
 </head>
 
 <body>
-<table class="table data-grid table-striped table-condensed">
+<table class="table data-grid table-striped table-condensed table-bordered">
     <thead>
     <tr class="C_HEADERS">
         <th>Gene</th>
-        <th>Coordinate</th>
         <th>MAF(%)</th>
         <th>Polyphen2 prediction</th>
         <th>Gene Function</th>
         <th>Minor Allele Transmitted</th>
         <th>Major Allele Transmitted</th>
-        <th>&nbsp;</th>
+        <th>Admix Ratios</th>
     </tr>
     </thead>
 </table>
@@ -74,14 +73,18 @@
             _.each(rows, function (row) {
                 var GENE = row["Gene"];
                 html += "<tr>";
-                _.each(headers, function (h) {
-                    html += "<td>";
-                    if (!_.isEmpty(h.innerHTML) && !_.isEmpty(row[h.innerHTML])) {
-                        html += row[h.innerHTML];
-                    }
-                    html += "</td>";
-                });
-                html += "<td id='C_" + GENE + "' class='vis_container'></td>";
+                html += "<td class='span2'>";
+                html += "<strong>" + GENE + "</strong>";
+                html += "<ul class='nav nav-list'>";
+                html += "<li>" + row["Coordinate"] + "</li>";
+                html += "</ul>";
+                html += "</td>";
+                html += "<td class='span1'>" + row["MAF(%)"] + "</td>";
+                html += "<td class='span1'>" + row["Polyphen2 prediction"] + "</td>";
+                html += "<td class='span3'><i>" + row["Gene Function"] + "</i></td>";
+                html += "<td class='span1'>" + row["Minor Allele Transmitted"] + "</td>";
+                html += "<td class='span1'>" + row["Major Allele Transmitted"] + "</td>";
+                html += "<td class='span3' id='C_" + GENE + "' class='vis_container'></td>";
                 html += "</tr>";
                 SUB_POPULATION_PERCS[GENE] = {};
                 _.each(RACES, function (race) {

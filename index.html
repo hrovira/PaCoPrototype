@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>ITMI Pre-Term Birth Study</title>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
     <link type="text/css" rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.0/css/bootstrap.min.css"/>
     <style type="text/css">
@@ -102,6 +103,7 @@
 
         var x = d3.scale.ordinal().domain(RACES).rangePoints([0, w]);
         var y = {};
+        var strokeFn = d3.scale.category20b();
 
         var axis = d3.svg.axis().ticks(0).orient("left");
 
@@ -117,8 +119,11 @@
                 });
 
                 // Add foreground lines.
+                var idx = 0;
                 svg.append("svg:g").attr("class", "foreground").selectAll("path").data(data)
-                        .enter().append("svg:path").attr("d", path).attr("stroke", "#080");
+                        .enter().append("svg:path").attr("d", path).attr("stroke", function(d) {
+                            return strokeFn(idx++ % 20);
+                        });
 
                 // Add a group element for each trait.
                 var g = svg.selectAll(".trait").data(RACES).enter().append("svg:g").attr("class", "trait")
